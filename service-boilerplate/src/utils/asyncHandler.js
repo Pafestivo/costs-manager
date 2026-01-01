@@ -4,8 +4,8 @@
   you can check the placeholder health route for an example
   without this errors will not be passed to the error middleware correctly
  */
-export function asyncHandler(fn) {
-  return function wrapped(req, res, next) {
+export const asyncHandler = (fn) => {
+  return (req, res, next) => {
     Promise.resolve(fn(req, res, next)).catch(next);
   };
-}
+};

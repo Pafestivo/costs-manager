@@ -4,7 +4,7 @@
  */
 import { HttpError } from "../utils/httpError.js";
 
-export function notFoundMiddleware(req, _res, next) {
+export const notFoundMiddleware = (req, _res, next) => {
   next(
     new HttpError({
       status: 404,
@@ -13,4 +13,4 @@ export function notFoundMiddleware(req, _res, next) {
       expose: true,
     })
   );
-}
+};

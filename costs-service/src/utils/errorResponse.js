@@ -1,7 +1,3 @@
-/**
-  this file shouldn't be messed with or manually used 
-  it's used automatically by the error middleware to normalize errors
- */
 export const toErrorResponse = (err, fallbackId = "INTERNAL_ERROR") => {
   const id = (err && err.id) || fallbackId;
   const message =

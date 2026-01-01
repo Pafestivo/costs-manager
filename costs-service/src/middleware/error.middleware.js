@@ -1,8 +1,3 @@
-/**
-  global error handling middleware, also should not be messed with
-  must be the last middleware in app.js
-  all errors are normalized to { id, message } as required
- */
 import { logger } from "../logger/pino.js";
 import { toErrorResponse } from "../utils/errorResponse.js";
 

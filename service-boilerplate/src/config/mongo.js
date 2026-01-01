@@ -8,7 +8,7 @@ import { logger } from "../logger/pino.js";
 
 let connected = false;
 
-export async function connectMongo() {
+export const connectMongo = async () => {
   if (connected) return;
 
   mongoose.set("strictQuery", true);
@@ -23,11 +23,11 @@ export async function connectMongo() {
     logger.error({ err: e }, "mongo_connect_failed");
     throw e;
   }
-}
+};
 
-export async function disconnectMongo() {
+export const disconnectMongo = async () => {
   if (!connected) return;
   await mongoose.disconnect();
   connected = false;
   logger.info("mongo_disconnected");
-}
+};

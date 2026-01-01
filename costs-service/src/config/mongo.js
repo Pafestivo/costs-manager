@@ -1,8 +1,3 @@
-/**
-  mongo connection logic, shouldn't be changed between services
-  we just need to update the connection string to the atlas in the .env
-  connectMongo() and disconnectMongo() are already used in server.js so no need to worry about them
- */
 import mongoose from "mongoose";
 import { logger } from "../logger/pino.js";
 
