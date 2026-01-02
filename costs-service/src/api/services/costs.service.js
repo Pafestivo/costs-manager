@@ -157,3 +157,26 @@ const generateReport = async (userid, year, month) => {
     costs: costsArray,
   };
 };
+
+/**
+ * get total costs for a specific user
+ * @param {Number} userid - user ID
+ * @returns {Promise<Object>} { userid, total } - aggregated total cost
+ */
+export const getUserCosts = async (userid) => {
+  // TODO: validate userid by calling the users microservice
+
+  // aggregate total costs for the user
+  const result = await Cost.aggregate([
+    { $match: { userid } },
+    { $group: { _id: null, total: { $sum: "$sum" } } },
+  ]);
+
+  // if no costs found, return total of 0
+  const total = result.length > 0 ? result[0].total : 0;
+
+  return {
+    userid,
+    total,
+  };
+};

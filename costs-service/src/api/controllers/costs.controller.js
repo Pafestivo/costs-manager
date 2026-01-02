@@ -127,3 +127,49 @@ export const getMonthlyReport = asyncHandler(async (req, res) => {
 
   res.status(200).json(report);
 });
+
+/**
+ * get total costs for a specific user
+ * GET /api/user/costs?id={userid}
+ * @param {Number} req.query.id - user ID
+ * @returns {Object} { userid, total } - aggregated total cost
+ */
+export const getUserCosts = asyncHandler(async (req, res) => {
+  // TODO: use the LOGS microservice to log this action
+  logger.info({ endpoint: "getUserCosts" }, "Endpoint accessed: getUserCosts");
+
+  const { id } = req.query;
+
+  // validate required query parameter
+  if (!id) {
+    throw new HttpError({
+      status: 400,
+      id: 8,
+      message: "Missing required query parameter: id",
+      expose: true,
+    });
+  }
+
+  // validate numeric value
+  const userid = Number(id);
+
+  if (isNaN(userid)) {
+    throw new HttpError({
+      status: 400,
+      id: 9,
+      message: "Parameter id must be a valid number",
+      expose: true,
+    });
+  }
+
+  // get total costs for the user
+  const result = await costsService.getUserCosts(userid);
+
+  // TODO: use the LOGS microservice to log this action
+  logger.info(
+    { userid, total: result.total },
+    "User total costs retrieved successfully"
+  );
+
+  res.status(200).json(result);
+});

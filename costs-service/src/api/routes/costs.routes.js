@@ -14,4 +14,8 @@ router.post("/add", costsController.addCost);
 // Query params: id (userid), year, month
 router.get("/report", costsController.getMonthlyReport);
 
+// GET /api/user/costs - Get all costs for a user
+// Query params: id (userid)
+router.get("/user/costs", costsController.getUserCosts);
+
 export default router;

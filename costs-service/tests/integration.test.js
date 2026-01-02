@@ -354,4 +354,162 @@ describe("COSTS Microservice Tests", () => {
       expect(typeof response.body.message).toBe("string");
     });
   });
+
+  describe("GET /api/user/costs - Get Total User Costs", () => {
+    beforeEach(async () => {
+      // add multiple test costs for the user across different months and categories
+      await Cost.create([
+        {
+          description: "Groceries",
+          category: "food",
+          userid: testUserid,
+          sum: 150.5,
+          date: new Date(2026, 0, 15),
+        },
+        {
+          description: "Rent payment",
+          category: "housing",
+          userid: testUserid,
+          sum: 25,
+          date: new Date(2026, 0, 10),
+        },
+        {
+          description: "Python course",
+          category: "education",
+          userid: testUserid,
+          sum: 299,
+          date: new Date(2025, 11, 20),
+        },
+        {
+          description: "Doctor visit",
+          category: "health",
+          userid: testUserid,
+          sum: 120,
+          date: new Date(2026, 0, 5),
+        },
+        {
+          description: "Concert tickets",
+          category: "sports",
+          userid: testUserid,
+          sum: 85,
+          date: new Date(2026, 1, 1),
+        },
+      ]);
+
+      // add costs for another user to verify filtering
+      await Cost.create({
+        description: "Other user cost",
+        category: "food",
+        userid: 999,
+        sum: 50,
+        date: new Date(2026, 0, 15),
+      });
+    });
+
+    it("should return correct total for user with costs", async () => {
+      const response = await request(app)
+        .get("/api/user/costs")
+        .query({ id: testUserid });
+
+      expect(response.status).toBe(200);
+      expect(response.body).toHaveProperty("userid", testUserid);
+      expect(response.body).toHaveProperty("total");
+      // 150.5 + 25 + 299 + 120 + 85 = 679.5
+      expect(response.body.total).toBe(679.5);
+    });
+
+    it("should return response in correct format", async () => {
+      const response = await request(app)
+        .get("/api/user/costs")
+        .query({ id: testUserid });
+
+      expect(response.status).toBe(200);
+      expect(typeof response.body).toBe("object");
+      expect(Object.keys(response.body)).toEqual(["userid", "total"]);
+      expect(typeof response.body.userid).toBe("number");
+      expect(typeof response.body.total).toBe("number");
+    });
+
+    it("should return zero total for user with no costs", async () => {
+      const response = await request(app)
+        .get("/api/user/costs")
+        .query({ id: 88888 });
+
+      expect(response.status).toBe(200);
+      expect(response.body).toHaveProperty("userid", 88888);
+      expect(response.body).toHaveProperty("total", 0);
+    });
+
+    it("should not include costs from other users", async () => {
+      const response = await request(app)
+        .get("/api/user/costs")
+        .query({ id: testUserid });
+
+      expect(response.status).toBe(200);
+      // total should be 679.5 (not including the 50 from userid 999)
+      expect(response.body.total).toBe(679.5);
+    });
+
+    it("should aggregate costs across multiple months and years", async () => {
+      const response = await request(app)
+        .get("/api/user/costs")
+        .query({ id: testUserid });
+
+      expect(response.status).toBe(200);
+      // should aggregate costs from both 2025 (299) and 2026 (380.5)
+      expect(response.body.total).toBe(679.5);
+    });
+
+    it("should aggregate costs across all categories", async () => {
+      const response = await request(app)
+        .get("/api/user/costs")
+        .query({ id: testUserid });
+
+      expect(response.status).toBe(200);
+      // should aggregate food, housing, education, health, and sports
+      expect(response.body.total).toBe(679.5);
+    });
+
+    it("should reject missing id parameter", async () => {
+      const response = await request(app).get("/api/user/costs").query({});
+
+      expect(response.status).toBe(400);
+      expect(response.body).toHaveProperty("id", 8);
+      expect(response.body).toHaveProperty("message");
+      expect(response.body.message).toContain(
+        "Missing required query parameter"
+      );
+    });
+
+    it("should validate id is numeric", async () => {
+      const response = await request(app)
+        .get("/api/user/costs")
+        .query({ id: "invalid" });
+
+      expect(response.status).toBe(400);
+      expect(response.body).toHaveProperty("id", 9);
+      expect(response.body).toHaveProperty("message");
+      expect(response.body.message).toContain("must be a valid number");
+    });
+
+    it("should handle decimal sums correctly", async () => {
+      const response = await request(app)
+        .get("/api/user/costs")
+        .query({ id: testUserid });
+
+      expect(response.status).toBe(200);
+      // includes 150.5 as a decimal
+      expect(response.body.total).toBe(679.5);
+    });
+
+    it("should return correct total for other user", async () => {
+      const response = await request(app)
+        .get("/api/user/costs")
+        .query({ id: 999 });
+
+      expect(response.status).toBe(200);
+      expect(response.body).toHaveProperty("userid", 999);
+      expect(response.body).toHaveProperty("total", 50);
+    });
+  });
 });
