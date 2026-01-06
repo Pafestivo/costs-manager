@@ -1,8 +1,6 @@
-/**
-  server entry point, starts the server and connects to mongo
-  loads all configurations from app.js
-  nothing should really change here
- */
+const app = require('./app');
+
+// logs-service/src/server.js
 import "dotenv/config";
 import { createServer } from "node:http";
 import app from "./app.js";
@@ -33,8 +31,6 @@ async function shutdown(signal) {
       logger.warn("shutdown_complete");
       process.exit(0);
     });
-
-    // hard-exit safety
     setTimeout(() => process.exit(1), 8000).unref();
   } catch (e) {
     logger.error({ err: e }, "shutdown_failed");

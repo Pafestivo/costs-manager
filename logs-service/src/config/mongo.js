@@ -1,33 +1,16 @@
-/**
-  mongo connection logic, shouldn't be changed between services
-  we just need to update the connection string to the atlas in the .env
-  connectMongo() and disconnectMongo() are already used in server.js so no need to worry about them
- */
-import mongoose from "mongoose";
-import { logger } from "../logger/pino.js";
+const mongoose = require('mongoose');
 
-let connected = false;
-
-export const connectMongo = async () => {
-  if (connected) return;
-
-  mongoose.set("strictQuery", true);
-
+const connectDB = async () => {
   try {
     await mongoose.connect(process.env.MONGO_URI, {
-      serverSelectionTimeoutMS: 8000,
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
     });
-    connected = true;
-    logger.info("mongo_connected");
-  } catch (e) {
-    logger.error({ err: e }, "mongo_connect_failed");
-    throw e;
+    console.log('MongoDB connected');
+  } catch (err) {
+    console.error('MongoDB connection error:', err);
+    process.exit(1);
   }
 };
 
-export const disconnectMongo = async () => {
-  if (!connected) return;
-  await mongoose.disconnect();
-  connected = false;
-  logger.info("mongo_disconnected");
-};
+module.exports = connectDB;
