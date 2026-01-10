@@ -1,7 +1,7 @@
 /**
  * About service - provides information about the development team
  */
-import { developers } from '../../config/developers. js';
+import { developers } from '../../config/developers.js';
 
 export const aboutService = {
   /**

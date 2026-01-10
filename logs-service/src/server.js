@@ -1,6 +1,8 @@
-const app = require('./app');
 
-// logs-service/src/server.js
+/*
+  This file starts the HTTP server for the logs service.
+  It handles MongoDB connection, server startup, and graceful shutdown.
+*/
 import "dotenv/config";
 import { createServer } from "node:http";
 import app from "./app.js";
@@ -9,6 +11,7 @@ import { logger } from "./logger/pino.js";
 
 const server = createServer(app);
 
+// Start the server
 async function start() {
   await connectMongo();
   server.listen(process.env.PORT, () => {
@@ -23,6 +26,7 @@ async function start() {
   });
 }
 
+// Graceful shutdown
 async function shutdown(signal) {
   try {
     logger.warn({ signal }, "shutdown_started");

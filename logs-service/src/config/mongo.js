@@ -1,6 +1,12 @@
+
+/*
+  This file provides MongoDB connection logic for the logs service.
+  It connects to the database and handles connection errors.
+*/
 const mongoose = require('mongoose');
 
-const connectDB = async () => {
+// Connect to MongoDB
+const connectDb = async () => {
   try {
     await mongoose.connect(process.env.MONGO_URI, {
       useNewUrlParser: true,
@@ -13,4 +19,4 @@ const connectDB = async () => {
   }
 };
 
-module.exports = connectDB;
+module.exports = connectDb;

@@ -1,7 +1,7 @@
 /**
  * About controller - handles requests for system information
  */
-import { aboutService } from './about.service. js';
+import { aboutService } from './about.service.js';
 
 export const aboutController = {
   /**

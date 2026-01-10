@@ -5,14 +5,14 @@
 export const developers = [
   {
     first_name: 'Noa',
-    last_name: 'Elyashar',  // מלאי את שם המשפחה שלך
+    last_name: 'Elyashar',  
   },
   {
     first_name: 'Noa',
-    last_name: 'Geta',  // מלאי את שם השותף/ה
+    last_name: 'Geta', 
   },
   {
     first_name: 'Or',
-    last_name: 'Rodrigez',  // מלאי את שם השותף/ה
+    last_name: 'Rodrigez',  
   },
 ];

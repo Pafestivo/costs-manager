@@ -8,6 +8,5 @@ import aboutRoutes from '../about/about.routes.js';
 const router = Router();
 
 router.use('/health', healthRoutes);
-router.use('/about', aboutRoutes);  // <-- הוספה חדשה
-
+router.use('/about', aboutRoutes);  
 export default router;
