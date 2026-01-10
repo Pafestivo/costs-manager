@@ -44,4 +44,4 @@ reportSchema.index({ userid: 1, year: 1, month: 1 }, { unique: true });
 // create and export the Report model
 const Report = mongoose.model("Report", reportSchema);
 
-export default Report;
+export default report;

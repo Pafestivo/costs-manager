@@ -1,14 +1,19 @@
-import request from "supertest";
-import app from "../src/app.js";
-import { connectMongo, disconnectMongo } from "../src/config/mongo.js";
-import Cost from "../src/models/Cost.js";
-import Report from "../src/models/Report.js";
-import { COST_CATEGORIES } from "../src/utils/constants.js";
+import request from "supertest"; // HTTP assertions for Express apps
+import app from "../src/app.js"; // Main Express application
+import { connectMongo, disconnectMongo } from "../src/config/mongo.js"; // MongoDB connection helpers
+import Cost from "../src/models/Cost.js"; // Mongoose model for costs
+import Report from "../src/models/Report.js"; // Mongoose model for reports
+import { COST_CATEGORIES } from "../src/utils/constants.js"; // List of allowed cost categories
 
 beforeAll(async () => {
   await connectMongo();
 });
 
+/*
+ * Integration tests for the COSTS microservice.
+ * These tests cover API endpoints, database interactions, and business logic.
+ * Uses Jest and Supertest for HTTP assertions and MongoDB for persistence.
+ */
 afterAll(async () => {
   await disconnectMongo();
 });
@@ -16,23 +21,28 @@ afterAll(async () => {
 beforeEach(async () => {
   // tests are using the test database (MONGO_URI_TEST)
   await Cost.deleteMany({});
+// Import dependencies and models
   await Report.deleteMany({});
 });
 
 describe("COSTS Microservice Tests", () => {
+// Connect to the test database before all tests
   const testUserid = 123123;
 
   describe("POST /api/add - Add Cost Item", () => {
     it("should add a new cost item successfully", async () => {
+// Disconnect from the test database after all tests
       const costData = {
         description: "Groceries",
         category: "food",
         userid: testUserid,
         sum: 150.5,
       };
+// Clean up collections before each test
 
       const response = await request(app).post("/api/add").send(costData);
 
+  // Group tests for the COSTS microservice
       expect(response.status).toBe(201);
       expect(response.body).toHaveProperty("description", "Groceries");
       expect(response.body).toHaveProperty("category", "food");
@@ -42,8 +52,10 @@ describe("COSTS Microservice Tests", () => {
     });
 
     it("should accept all valid categories", async () => {
+      // Test data for adding a cost item
       for (const category of COST_CATEGORIES) {
         const cost = {
+      // Send POST request to add a cost item
           description: `Test ${category}`,
           category,
           userid: testUserid,
@@ -51,6 +63,7 @@ describe("COSTS Microservice Tests", () => {
         };
 
         const response = await request(app).post("/api/add").send(cost);
+      // Assert response properties for the new cost item
         expect(response.status).toBe(201);
         expect(response.body.category).toBe(category);
       }
@@ -61,10 +74,12 @@ describe("COSTS Microservice Tests", () => {
         description: "Test",
         category: "FOOD",
         userid: testUserid,
+        // Test data for each valid category
         sum: 100,
       };
 
       const response = await request(app).post("/api/add").send(cost);
+        // Assert response for each valid category
       expect(response.status).toBe(201);
       expect(response.body.category).toBe("food");
     });
@@ -75,23 +90,28 @@ describe("COSTS Microservice Tests", () => {
         category: "invalid",
         userid: testUserid,
         sum: 100,
+      // Test data for case-insensitive category
       };
 
       const response = await request(app).post("/api/add").send(cost);
+      // Should reject invalid category and return 400
       expect(response.status).toBe(400);
     });
 
     it("should reject missing required fields", async () => {
+      // Send request with missing required fields
       const response = await request(app).post("/api/add").send({
         description: "Test",
       });
 
+      // Should return 400 and error details
       expect(response.status).toBe(400);
       expect(response.body).toHaveProperty("id");
       expect(response.body).toHaveProperty("message");
     });
 
     it("should reject negative sum", async () => {
+      // Prepare cost with negative sum
       const cost = {
         description: "Test",
         category: "food",
@@ -99,11 +119,13 @@ describe("COSTS Microservice Tests", () => {
         sum: -50,
       };
 
+      // Should reject negative sum and return 400
       const response = await request(app).post("/api/add").send(cost);
       expect(response.status).toBe(400);
     });
 
     it("should reject costs from past months", async () => {
+      // Prepare cost with a date in a past month
       const cost = {
         description: "Past month cost",
         category: "food",
@@ -112,6 +134,7 @@ describe("COSTS Microservice Tests", () => {
         date: new Date(2025, 11, 27),
       };
 
+      // Should reject costs from past months and return error details
       const response = await request(app).post("/api/add").send(cost);
       expect(response.status).toBe(400);
       expect(response.body).toHaveProperty("id");
@@ -120,6 +143,7 @@ describe("COSTS Microservice Tests", () => {
     });
 
     it("should accept costs with past dates in current month", async () => {
+      // Prepare cost with a date earlier in the current month
       const cost = {
         description: "Early month cost",
         category: "food",
@@ -128,12 +152,14 @@ describe("COSTS Microservice Tests", () => {
         date: new Date(2026, 0, 3),
       };
 
+      // Should accept and return 201 with date property
       const response = await request(app).post("/api/add").send(cost);
       expect(response.status).toBe(201);
       expect(response.body).toHaveProperty("date");
     });
 
     it("should accept costs with current month dates", async () => {
+      // Prepare cost with a date in the current month
       const cost = {
         description: "Current month cost",
         category: "food",
@@ -142,11 +168,13 @@ describe("COSTS Microservice Tests", () => {
         date: new Date(2026, 0, 15),
       };
 
+      // Should accept and return 201
       const response = await request(app).post("/api/add").send(cost);
       expect(response.status).toBe(201);
     });
 
     it("should accept costs with future month dates", async () => {
+      // Prepare cost with a date in a future month
       const cost = {
         description: "Future month cost",
         category: "food",
@@ -155,11 +183,13 @@ describe("COSTS Microservice Tests", () => {
         date: new Date(2026, 1, 15),
       };
 
+      // Should accept and return 201
       const response = await request(app).post("/api/add").send(cost);
       expect(response.status).toBe(201);
     });
 
     it("should default to current date if no date provided", async () => {
+      // Prepare cost without a date field
       const cost = {
         description: "No date",
         category: "food",
@@ -167,6 +197,7 @@ describe("COSTS Microservice Tests", () => {
         sum: 100,
       };
 
+      // Should accept and set current date
       const response = await request(app).post("/api/add").send(cost);
       expect(response.status).toBe(201);
       expect(response.body).toHaveProperty("date");
@@ -209,14 +240,18 @@ describe("COSTS Microservice Tests", () => {
     });
 
     it("should return monthly report in correct format", async () => {
+      // Send GET request for monthly report with test user, year, and month
       const response = await request(app)
         .get("/api/report")
         .query({ id: testUserid, year: 2026, month: 1 });
 
+      // Check that the response status is 200 (OK)
       expect(response.status).toBe(200);
+      // Validate that the response contains the correct user, year, and month
       expect(response.body).toHaveProperty("userid", testUserid);
       expect(response.body).toHaveProperty("year", 2026);
       expect(response.body).toHaveProperty("month", 1);
+      // Ensure the response has a 'costs' property that is an array
       expect(response.body).toHaveProperty("costs");
       expect(Array.isArray(response.body.costs)).toBe(true);
     });
@@ -343,10 +378,12 @@ describe("COSTS Microservice Tests", () => {
 
   describe("error handling", () => {
     it("should return proper error format", async () => {
+      // Send GET request with invalid user id to trigger error
       const response = await request(app)
         .get("/api/report")
         .query({ id: "invalid", year: 2026, month: 1 });
 
+      // Should return 400 and error object with id and message
       expect(response.status).toBe(400);
       expect(response.body).toHaveProperty("id");
       expect(response.body).toHaveProperty("message");
@@ -407,10 +444,12 @@ describe("COSTS Microservice Tests", () => {
     });
 
     it("should return correct total for user with costs", async () => {
+      // Send GET request for total costs for test user
       const response = await request(app)
         .get("/api/user/costs")
         .query({ id: testUserid });
 
+      // Should return 200 and correct total for the user
       expect(response.status).toBe(200);
       expect(response.body).toHaveProperty("userid", testUserid);
       expect(response.body).toHaveProperty("total");
@@ -419,10 +458,12 @@ describe("COSTS Microservice Tests", () => {
     });
 
     it("should return response in correct format", async () => {
+      // Send GET request for total costs for test user
       const response = await request(app)
         .get("/api/user/costs")
         .query({ id: testUserid });
 
+      // Should return an object with userid and total as numbers
       expect(response.status).toBe(200);
       expect(typeof response.body).toBe("object");
       expect(Object.keys(response.body)).toEqual(["userid", "total"]);
@@ -431,32 +472,37 @@ describe("COSTS Microservice Tests", () => {
     });
 
     it("should return zero total for user with no costs", async () => {
+      // Send GET request for a user with no costs
       const response = await request(app)
         .get("/api/user/costs")
         .query({ id: 88888 });
 
+      // Should return 200 and total 0 for the user
       expect(response.status).toBe(200);
       expect(response.body).toHaveProperty("userid", 88888);
       expect(response.body).toHaveProperty("total", 0);
     });
 
     it("should not include costs from other users", async () => {
+      // Send GET request for test user, should not include other users' costs
       const response = await request(app)
         .get("/api/user/costs")
         .query({ id: testUserid });
 
+      // Should only sum costs for the test user
       expect(response.status).toBe(200);
       // total should be 679.5 (not including the 50 from userid 999)
       expect(response.body.total).toBe(679.5);
     });
 
     it("should aggregate costs across multiple months and years", async () => {
+      // Send GET request for test user, should sum costs from all months/years
       const response = await request(app)
         .get("/api/user/costs")
         .query({ id: testUserid });
 
+      // Should aggregate costs from both 2025 (299) and 2026 (380.5)
       expect(response.status).toBe(200);
-      // should aggregate costs from both 2025 (299) and 2026 (380.5)
       expect(response.body.total).toBe(679.5);
     });
 
@@ -471,8 +517,10 @@ describe("COSTS Microservice Tests", () => {
     });
 
     it("should reject missing id parameter", async () => {
+      // Send GET request without id parameter
       const response = await request(app).get("/api/user/costs").query({});
 
+      // Should return 400 and error message about missing parameter
       expect(response.status).toBe(400);
       expect(response.body).toHaveProperty("id", 8);
       expect(response.body).toHaveProperty("message");
@@ -482,10 +530,12 @@ describe("COSTS Microservice Tests", () => {
     });
 
     it("should validate id is numeric", async () => {
+      // Send GET request with non-numeric id
       const response = await request(app)
         .get("/api/user/costs")
         .query({ id: "invalid" });
 
+      // Should return 400 and error message about id type
       expect(response.status).toBe(400);
       expect(response.body).toHaveProperty("id", 9);
       expect(response.body).toHaveProperty("message");
@@ -493,20 +543,23 @@ describe("COSTS Microservice Tests", () => {
     });
 
     it("should handle decimal sums correctly", async () => {
+      // Send GET request for test user, should handle decimal values
       const response = await request(app)
         .get("/api/user/costs")
         .query({ id: testUserid });
 
+      // Should return total including decimal values (e.g., 150.5)
       expect(response.status).toBe(200);
-      // includes 150.5 as a decimal
       expect(response.body.total).toBe(679.5);
     });
 
     it("should return correct total for other user", async () => {
+      // Send GET request for another user
       const response = await request(app)
         .get("/api/user/costs")
         .query({ id: 999 });
 
+      // Should return correct total for user 999
       expect(response.status).toBe(200);
       expect(response.body).toHaveProperty("userid", 999);
       expect(response.body).toHaveProperty("total", 50);
