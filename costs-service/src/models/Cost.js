@@ -51,4 +51,4 @@ costSchema.index({ userid: 1, date: 1 });
 // create and export the Cost model
 const Cost = mongoose.model("Cost", costSchema);
 
-export default cost;
+export default Cost;

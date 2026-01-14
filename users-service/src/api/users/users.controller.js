@@ -3,16 +3,16 @@
  * Handles HTTP requests related to users
  */
 
+import { HttpError } from "../../utils/httpError.js";
 import * as usersService from "./users.service.js";
-import { HttpError } from "../../utils/HttpError.js";
 
 /**
  * Get all users
  * GET /api/users
  */
 export const getAllUsers = async (req, res) => {
-    const users = await usersService.getAllUsers();
-    res.status(200).json(users);
+  const users = await usersService.getAllUsers();
+  res.status(200).json(users);
 };
 
 /**
@@ -20,20 +20,20 @@ export const getAllUsers = async (req, res) => {
  * GET /api/users/:id
  */
 export const getUserById = async (req, res) => {
-    const { id } = req.params;
-    const numericId = Number(id);
+  const { id } = req.params;
+  const numericId = Number(id);
 
-    if (Number.isNaN(numericId) || numericId <= 0) {
-        throw new HttpError(400, "Invalid user id");
-    }
+  if (Number.isNaN(numericId) || numericId <= 0) {
+    throw new HttpError(400, "Invalid user id");
+  }
 
-    const user = await usersService.getUserById(numericId);
+  const user = await usersService.getUserById(numericId);
 
-    if (!user) {
-        throw new HttpError(404, "User not found");
-    }
+  if (!user) {
+    throw new HttpError(404, "User not found");
+  }
 
-    res.status(200).json(user);
+  res.status(200).json(user);
 };
 
 /**
@@ -41,11 +41,11 @@ export const getUserById = async (req, res) => {
  * POST /api/users
  */
 export const addUser = async (req, res) => {
-    const user = await usersService.createUser(req.body);
+  const user = await usersService.createUser(req.body);
 
-    if (!user) {
-        throw new HttpError(409, "User already exists");
-    }
+  if (!user) {
+    throw new HttpError(409, "User already exists");
+  }
 
-    res.status(201).json(user);
+  res.status(201).json(user);
 };
