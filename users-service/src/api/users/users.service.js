@@ -24,12 +24,18 @@ export const getUserById = async (id) => {
 /**
  * Create a new user
  * @param {object} userData
+ * @param {number} customId - Optional custom ID for the user
  * @returns created user
  */
-export const createUser = async (userData) => {
-  // Generate next available ID
-  const lastUser = await User.findOne().sort({ id: -1 }).limit(1).lean().exec();
-  const nextId = lastUser ? lastUser.id + 1 : 1;
+export const createUser = async (userData, customId) => {
+  // Use custom ID if provided, otherwise generate next available ID
+  let nextId;
+  if (customId !== undefined) {
+    nextId = Number(customId);
+  } else {
+    const lastUser = await User.findOne().sort({ id: -1 }).limit(1).lean().exec();
+    nextId = lastUser ? lastUser.id + 1 : 1;
+  }
 
   // Parse birthday if it's a string in DD/MM/YYYY format
   let birthday = userData.birthday;
