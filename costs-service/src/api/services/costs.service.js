@@ -8,6 +8,8 @@ import Report from "../../models/Report.js";
 import { HttpError } from "../../utils/httpError.js";
 import { logger } from "../../logger/pino.js";
 import { COST_CATEGORIES } from "../../utils/constants.js";
+import { createLog } from "../../utils/createLog.js";
+import { validateUser } from "../../utils/validateUser.js";
 
 /**
  * add a new cost item to the database
@@ -17,7 +19,30 @@ import { COST_CATEGORIES } from "../../utils/constants.js";
 export const addCost = async (costData) => {
   const { description, category, userid, sum, date } = costData;
 
-  // TODO: add a call to the users microservice here to validate userid
+  // validate userid by calling the users microservice
+  const userExists = await validateUser(userid);
+  if (!userExists) {
+    const errorMsg = `User with id ${userid} not found`;
+    // Log the error
+    try {
+      await createLog(
+        "costs-service",
+        "POST",
+        "/api/addcost",
+        404,
+        JSON.stringify({ error: errorMsg, userid })
+      );
+    } catch (logError) {
+      logger.error({ logError }, "Failed to send log to logs service");
+    }
+    throw new HttpError({
+      status: 404,
+      id: "USER_NOT_FOUND",
+      message: errorMsg,
+      expose: true,
+    });
+  }
+
   // following computed design pattern, we have to block adding costs to past months (because the report is already cached in DB)
   const costDate = date ? new Date(date) : new Date();
   const now = new Date();
@@ -31,10 +56,27 @@ export const addCost = async (costData) => {
     costYear < currentYear ||
     (costYear === currentYear && costMonth < currentMonth)
   ) {
+    const errorMsg = "Cannot add costs with dates from past months";
+    // Log the error
+    try {
+      await createLog(
+        "costs-service",
+        "POST",
+        "/api/addcost",
+        400,
+        JSON.stringify({
+          error: errorMsg,
+          userid,
+          costDate: costDate.toISOString(),
+        })
+      );
+    } catch (logError) {
+      logger.error({ logError }, "Failed to send log to logs service");
+    }
     throw new HttpError({
       status: 400,
       id: 7,
-      message: "Cannot add costs with dates from past months",
+      message: errorMsg,
       expose: true,
     });
   }
@@ -62,7 +104,29 @@ export const addCost = async (costData) => {
  * @returns {Promise<Object>} monthly report organized by category
  */
 export const getMonthlyReport = async (userid, year, month) => {
-  //TODO: validate userid by calling the users microservice
+  // validate userid by calling the users microservice
+  const userExists = await validateUser(userid);
+  if (!userExists) {
+    const errorMsg = `User with id ${userid} not found`;
+    // Log the error
+    try {
+      await createLog(
+        "costs-service",
+        "GET",
+        `/api/report?year=${year}&month=${month}&user_id=${userid}`,
+        404,
+        JSON.stringify({ error: errorMsg, userid, year, month })
+      );
+    } catch (logError) {
+      logger.error({ logError }, "Failed to send log to logs service");
+    }
+    throw new HttpError({
+      status: 404,
+      id: "USER_NOT_FOUND",
+      message: errorMsg,
+      expose: true,
+    });
+  }
 
   // check if the requested month is in the past
   const now = new Date();
@@ -98,8 +162,21 @@ export const getMonthlyReport = async (userid, year, month) => {
       });
     } catch (error) {
       // log the caching error but still return the generated report, request didn't fail
-      //TODO: log this using the logs microservice
       logger.error({ error, userid, year, month }, "Failed to cache report");
+
+      // log to the logs microservice
+      try {
+        await createLog(
+          "costs-service",
+          "POST",
+          "/api/report",
+          500,
+          JSON.stringify({ error: error.message, userid, year, month })
+        );
+      } catch (logError) {
+        // if logging fails, just continue - don't block the request
+        logger.error({ logError }, "Failed to send log to logs service");
+      }
     }
   }
 
@@ -164,7 +241,29 @@ const generateReport = async (userid, year, month) => {
  * @returns {Promise<Object>} { userid, total } - aggregated total cost
  */
 export const getUserCosts = async (userid) => {
-  // TODO: validate userid by calling the users microservice
+  // validate userid by calling the users microservice
+  const userExists = await validateUser(userid);
+  if (!userExists) {
+    const errorMsg = `User with id ${userid} not found`;
+    // Log the error
+    try {
+      await createLog(
+        "costs-service",
+        "GET",
+        `/api/costs/${userid}`,
+        404,
+        JSON.stringify({ error: errorMsg, userid })
+      );
+    } catch (logError) {
+      logger.error({ logError }, "Failed to send log to logs service");
+    }
+    throw new HttpError({
+      status: 404,
+      id: "USER_NOT_FOUND",
+      message: errorMsg,
+      expose: true,
+    });
+  }
 
   // aggregate total costs for the user
   const result = await Cost.aggregate([
