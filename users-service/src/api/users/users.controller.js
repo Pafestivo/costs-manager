@@ -41,7 +41,23 @@ export const getUserById = async (req, res) => {
  * POST /api/users
  */
 export const addUser = async (req, res) => {
-  const user = await usersService.createUser(req.body);
+  const { id, ...userData } = req.body;
+  
+  // If custom ID is provided, validate it
+  if (id !== undefined) {
+    const numericId = Number(id);
+    if (Number.isNaN(numericId) || numericId <= 0) {
+      throw new HttpError(400, "Invalid user id");
+    }
+    
+    // Check if ID is already taken
+    const existingUser = await usersService.getUserById(numericId);
+    if (existingUser) {
+      throw new HttpError(409, "User ID already exists");
+    }
+  }
+
+  const user = await usersService.createUser(userData, id);
 
   if (!user) {
     throw new HttpError(409, "User already exists");
