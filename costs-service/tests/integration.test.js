@@ -21,28 +21,28 @@ afterAll(async () => {
 beforeEach(async () => {
   // tests are using the test database (MONGO_URI_TEST)
   await Cost.deleteMany({});
-// Import dependencies and models
+  // Import dependencies and models
   await Report.deleteMany({});
 });
 
 describe("COSTS Microservice Tests", () => {
-// Connect to the test database before all tests
+  // Connect to the test database before all tests
   const testUserid = 123123;
 
   describe("POST /api/add - Add Cost Item", () => {
     it("should add a new cost item successfully", async () => {
-// Disconnect from the test database after all tests
+      // Disconnect from the test database after all tests
       const costData = {
         description: "Groceries",
         category: "food",
         userid: testUserid,
         sum: 150.5,
       };
-// Clean up collections before each test
+      // Clean up collections before each test
 
       const response = await request(app).post("/api/add").send(costData);
 
-  // Group tests for the COSTS microservice
+      // Group tests for the COSTS microservice
       expect(response.status).toBe(201);
       expect(response.body).toHaveProperty("description", "Groceries");
       expect(response.body).toHaveProperty("category", "food");
@@ -55,7 +55,7 @@ describe("COSTS Microservice Tests", () => {
       // Test data for adding a cost item
       for (const category of COST_CATEGORIES) {
         const cost = {
-      // Send POST request to add a cost item
+          // Send POST request to add a cost item
           description: `Test ${category}`,
           category,
           userid: testUserid,
@@ -63,7 +63,7 @@ describe("COSTS Microservice Tests", () => {
         };
 
         const response = await request(app).post("/api/add").send(cost);
-      // Assert response properties for the new cost item
+        // Assert response properties for the new cost item
         expect(response.status).toBe(201);
         expect(response.body.category).toBe(category);
       }
@@ -79,7 +79,7 @@ describe("COSTS Microservice Tests", () => {
       };
 
       const response = await request(app).post("/api/add").send(cost);
-        // Assert response for each valid category
+      // Assert response for each valid category
       expect(response.status).toBe(201);
       expect(response.body.category).toBe("food");
     });
@@ -90,7 +90,7 @@ describe("COSTS Microservice Tests", () => {
         category: "invalid",
         userid: testUserid,
         sum: 100,
-      // Test data for case-insensitive category
+        // Test data for case-insensitive category
       };
 
       const response = await request(app).post("/api/add").send(cost);

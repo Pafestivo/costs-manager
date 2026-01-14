@@ -5,6 +5,11 @@ export const createLog = async (
   status,
   message = ""
 ) => {
+  // Skip logging in test environment
+  if (process.env.NODE_ENV === "test") {
+    return { success: true };
+  }
+
   const response = await fetch(process.env.LOG_SERVICE_URL, {
     method: "POST",
     headers: {
