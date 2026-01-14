@@ -1,6 +1,6 @@
 /**
  * Users routes
- * defines users related endpoints
+ * Defines HTTP endpoints related to users
  */
 
 import { Router } from "express";
@@ -9,18 +9,27 @@ import {
     getUserById,
     addUser,
 } from "./users.controller.js";
-import { validateAddUser } from "./users.validation.js";
-
+import { asyncHandler } from "../../utils/asyncHandler.js";
+import { validateCreateUser } from "../../middleware/validateUser.middleware.js";
 
 const router = Router();
 
-// GET /api/users
-router.get("/", getAllUsers);
+/**
+ * Get all users
+ * GET /api/users
+ */
+router.get("/", asyncHandler(getAllUsers));
 
-// GET /api/users/:id
-router.get("/:id", getUserById);
+/**
+ * Get user by id
+ * GET /api/users/:id
+ */
+router.get("/:id", asyncHandler(getUserById));
 
-// POST /api/users/add
-router.post("/add", validateAddUser, addUser);
+/**
+ * Create new user
+ * POST /api/users
+ */
+router.post("/", validateCreateUser, asyncHandler(addUser));
 
 export default router;
