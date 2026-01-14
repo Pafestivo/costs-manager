@@ -7,6 +7,7 @@ import { asyncHandler } from "../../utils/asyncHandler.js";
 import { logger } from "../../logger/pino.js";
 import { HttpError } from "../../utils/httpError.js";
 import { COST_CATEGORIES } from "../../utils/constants.js";
+import { createLog } from "../../utils/createLog.js";
 
 /**
  * add a new cost item
@@ -15,8 +16,14 @@ import { COST_CATEGORIES } from "../../utils/constants.js";
  * @returns {Object} created cost item
  */
 export const addCost = asyncHandler(async (req, res) => {
-  // TODO: use the LOGS microservice to log this action
   logger.info({ endpoint: "addCost" }, "Endpoint accessed: addCost");
+  await createLog(
+    "costs-service",
+    "POST",
+    "/api/add",
+    201,
+    JSON.stringify(req.body)
+  );
 
   const { description, category, userid, sum, date } = req.body;
 
@@ -61,8 +68,14 @@ export const addCost = asyncHandler(async (req, res) => {
     date,
   });
 
-  // TODO: use the LOGS microservice to log this action
   logger.info({ costId: cost._id }, "Cost item created successfully");
+  await createLog(
+    "costs-service",
+    "POST",
+    "/api/add",
+    201,
+    JSON.stringify(cost)
+  );
 
   res.status(201).json(cost);
 });
@@ -135,7 +148,13 @@ export const getMonthlyReport = asyncHandler(async (req, res) => {
  * @returns {Object} { userid, total } - aggregated total cost
  */
 export const getUserCosts = asyncHandler(async (req, res) => {
-  // TODO: use the LOGS microservice to log this action
+  await createLog(
+    "costs-service",
+    "GET",
+    "/api/user/costs",
+    200,
+    JSON.stringify(req.query)
+  );
   logger.info({ endpoint: "getUserCosts" }, "Endpoint accessed: getUserCosts");
 
   const { id } = req.query;
@@ -165,7 +184,13 @@ export const getUserCosts = asyncHandler(async (req, res) => {
   // get total costs for the user
   const result = await costsService.getUserCosts(userid);
 
-  // TODO: use the LOGS microservice to log this action
+  await createLog(
+    "costs-service",
+    "GET",
+    "/api/user/costs",
+    200,
+    JSON.stringify(req.query)
+  );
   logger.info(
     { userid, total: result.total },
     "User total costs retrieved successfully"
