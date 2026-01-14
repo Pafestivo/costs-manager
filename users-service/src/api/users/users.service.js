@@ -1,48 +1,42 @@
 /**
  * Users service
- * contains users business logic
+ * Handles users business logic and database access
  */
 
 import { User } from "../../models/user.model.js";
-import { getTotalCostByUserId } from "../costs/costs.service.js";
+
+/**
+ * Get all users from database
+ */
+export const getAllUsers = async () => {
+    return await User.find({}).lean().exec();
+};
 
 
-//get all users
-export async function getAllUsers() {
-    return await User.find({});
-}
 
- //get single user by id
-export async function getUserById(id) {
-    const user = await User.findOne({ id });
+/**
+ * Get user by id from database
+ * @param {number} id
+ * @returns user object or null
+ */
+export const getUserById = async (id) => {
+    return await User.findOne({ id }).lean().exec();
+};
 
-    if (!user) {
-        throw {
-            id: "USER_NOT_FOUND",
-            message: "user not found",
-        };
-    }
 
-    const total = await getTotalCostByUserId(id);
-
-    return {
-        id: user.id,
-        first_name: user.first_name,
-        last_name: user.last_name,
-        total,
-    };
-}
-
-//create new user
-export async function createUser(userData) {
+/**
+ * Create a new user
+ * @param {object} userData
+ * @returns created user
+ */
+export const createUser = async (userData) => {
     const existingUser = await User.findOne({ id: userData.id });
-    if (existingUser) {
-        throw {
-            id: "USER_ALREADY_EXISTS",
-            message: "user with this id already exists",
-        };
-    }
-    const user = new User(userData);
-    return await user.save();
-}
 
+    // If user already exists, return null
+    if (existingUser) {
+        return null;
+    }
+
+    const user = new User(userData);
+    return user.save();
+};
