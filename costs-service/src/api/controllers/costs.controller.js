@@ -17,13 +17,6 @@ import { createLog } from "../../utils/createLog.js";
  */
 export const addCost = asyncHandler(async (req, res) => {
   logger.info({ endpoint: "addCost" }, "Endpoint accessed: addCost");
-  await createLog(
-    "costs-service",
-    "POST",
-    "/api/add",
-    201,
-    JSON.stringify(req.body)
-  );
 
   const { description, category, userid, sum, date } = req.body;
 
@@ -69,13 +62,19 @@ export const addCost = asyncHandler(async (req, res) => {
   });
 
   logger.info({ costId: cost._id }, "Cost item created successfully");
-  await createLog(
-    "costs-service",
-    "POST",
-    "/api/add",
-    201,
-    JSON.stringify(cost)
-  );
+
+  // Log after successful operation (non-blocking)
+  try {
+    await createLog(
+      "costs-service",
+      "POST",
+      "/api/add",
+      201,
+      JSON.stringify(cost)
+    );
+  } catch (logError) {
+    logger.warn({ error: logError.message }, "Failed to create log entry");
+  }
 
   res.status(201).json(cost);
 });
@@ -148,13 +147,6 @@ export const getMonthlyReport = asyncHandler(async (req, res) => {
  * @returns {Object} { userid, total } - aggregated total cost
  */
 export const getUserCosts = asyncHandler(async (req, res) => {
-  await createLog(
-    "costs-service",
-    "GET",
-    "/api/user/costs",
-    200,
-    JSON.stringify(req.query)
-  );
   logger.info({ endpoint: "getUserCosts" }, "Endpoint accessed: getUserCosts");
 
   const { id } = req.query;
@@ -184,13 +176,19 @@ export const getUserCosts = asyncHandler(async (req, res) => {
   // get total costs for the user
   const result = await costsService.getUserCosts(userid);
 
-  await createLog(
-    "costs-service",
-    "GET",
-    "/api/user/costs",
-    200,
-    JSON.stringify(req.query)
-  );
+  // Log after successful operation (non-blocking)
+  try {
+    await createLog(
+      "costs-service",
+      "GET",
+      "/api/user/costs",
+      200,
+      JSON.stringify(req.query)
+    );
+  } catch (logError) {
+    logger.warn({ error: logError.message }, "Failed to create log entry");
+  }
+
   logger.info(
     { userid, total: result.total },
     "User total costs retrieved successfully"
