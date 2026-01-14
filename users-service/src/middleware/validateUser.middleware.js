@@ -6,18 +6,13 @@
 import { HttpError } from "../utils/httpError.js";
 
 export const validateCreateUser = (req, res, next) => {
-    const { id, first_name, last_name, birthday } = req.body;
+  const { first_name, last_name, birthday } = req.body;
 
-    // Validate required fields
-    if (!id || !first_name || !last_name || !birthday) {
-        throw new HttpError(400, "Missing required user fields");
-    }
+  // Validate required fields
+  if (!first_name || !last_name || !birthday) {
+    throw new HttpError(400, "Missing required user fields");
+  }
 
-    // Validate id
-    if (Number.isNaN(Number(id)) || Number(id) <= 0) {
-        throw new HttpError(400, "Invalid user id");
-    }
-
-    // Validation passed
-    next();
+  // Validation passed
+  next();
 };

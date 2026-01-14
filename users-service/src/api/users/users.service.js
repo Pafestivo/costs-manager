@@ -9,10 +9,8 @@ import { User } from "../../models/user.model.js";
  * Get all users from database
  */
 export const getAllUsers = async () => {
-    return await User.find({}).lean().exec();
+  return await User.find({}).lean().exec();
 };
-
-
 
 /**
  * Get user by id from database
@@ -20,9 +18,8 @@ export const getAllUsers = async () => {
  * @returns user object or null
  */
 export const getUserById = async (id) => {
-    return await User.findOne({ id }).lean().exec();
+  return await User.findOne({ id }).lean().exec();
 };
-
 
 /**
  * Create a new user
@@ -30,13 +27,29 @@ export const getUserById = async (id) => {
  * @returns created user
  */
 export const createUser = async (userData) => {
-    const existingUser = await User.findOne({ id: userData.id });
+  // Generate next available ID
+  const lastUser = await User.findOne().sort({ id: -1 }).limit(1).lean().exec();
+  const nextId = lastUser ? lastUser.id + 1 : 1;
 
-    // If user already exists, return null
-    if (existingUser) {
-        return null;
+  // Parse birthday if it's a string in DD/MM/YYYY format
+  let birthday = userData.birthday;
+  if (typeof birthday === "string") {
+    // Try to parse DD/MM/YYYY format
+    const parts = birthday.split("/");
+    if (parts.length === 3) {
+      const [day, month, year] = parts;
+      // Create date in YYYY-MM-DD format for proper parsing
+      birthday = new Date(`${year}-${month}-${day}`);
+    } else {
+      // Fallback to default Date parsing
+      birthday = new Date(birthday);
     }
+  }
 
-    const user = new User(userData);
-    return user.save();
+  const user = new User({
+    ...userData,
+    id: nextId,
+    birthday,
+  });
+  return user.save();
 };
