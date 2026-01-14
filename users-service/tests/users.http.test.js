@@ -3,7 +3,7 @@
  * Run server first, then execute this file with Node
  */
 
-const BASE_URL = "http://localhost:3001";
+const BASE_URL = "http://localhost:3006";
 
 async function testGetAllUsers() {
     const res = await fetch(`${BASE_URL}/api/users`);
