@@ -33,7 +33,11 @@ export const createUser = async (userData, customId) => {
   if (customId !== undefined) {
     nextId = Number(customId);
   } else {
-    const lastUser = await User.findOne().sort({ id: -1 }).limit(1).lean().exec();
+    const lastUser = await User.findOne()
+      .sort({ id: -1 })
+      .limit(1)
+      .lean()
+      .exec();
     nextId = lastUser ? lastUser.id + 1 : 1;
   }
 
